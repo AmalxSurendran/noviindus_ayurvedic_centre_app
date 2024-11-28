@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ayurvedic_centre_patients/utlit/colors.dart';
 
-class CommonWidget extends StatelessWidget {
+class Customfield extends StatelessWidget {
   final String hintText;
   final String label;
   final TextEditingController controller;
@@ -12,7 +12,7 @@ class CommonWidget extends StatelessWidget {
   final Widget? suffixIcon;
   final Widget? child;
 
-  const CommonWidget({
+  const Customfield({
     super.key,
     required this.hintText,
     required this.label,

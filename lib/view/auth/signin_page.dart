@@ -1,4 +1,4 @@
-import 'package:ayurvedic_centre_patients/utlit/common_widget.dart';
+import 'package:ayurvedic_centre_patients/utlit/customfield.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -58,7 +58,7 @@ class SigninPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
                         // Email TextField
-                        CommonWidget(
+                        Customfield(
                           label: 'Email',
                           hintText: 'Email',
                           controller: signinProvider.emailController,
@@ -68,7 +68,7 @@ class SigninPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 15),
                         // Password TextField
-                        CommonWidget(
+                        Customfield(
                           label: 'Password',
                           hintText: 'Password',
                           controller: signinProvider.passwordController,

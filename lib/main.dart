@@ -1,16 +1,22 @@
 import 'package:ayurvedic_centre_patients/utlit/colors.dart';
 import 'package:ayurvedic_centre_patients/provider/signin_provider.dart';
+import 'package:ayurvedic_centre_patients/utlit/shared_prefernce.dart';
 import 'package:ayurvedic_centre_patients/view/homepage.dart';
+import 'package:ayurvedic_centre_patients/view/popup.dart';
 import 'package:ayurvedic_centre_patients/view/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ayurvedic_centre_patients/view/Splash%20Screen/splash.dart';
 import 'package:ayurvedic_centre_patients/view/auth/signin_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final token = await SharedPreferencesHelper.getToken();
+
   runApp(
     ChangeNotifierProvider(
-      create: (_) => AppProvider(),
+      create: (_) => AppProvider()..setToken(token ?? ""),
       child: const MyApp(),
     ),
   );
@@ -42,6 +48,10 @@ class MyApp extends StatelessWidget {
           case '/regpage':
             return _customPageRoute(
               const RegisterPage(),
+            );
+          case '/pop':
+            return _customPageRoute(
+              const PopUp(),
             );
 
           default:

@@ -1,9 +1,15 @@
+import 'package:ayurvedic_centre_patients/services/pdf_services.dart';
 import 'package:ayurvedic_centre_patients/utlit/Custom_button.dart';
+import 'package:ayurvedic_centre_patients/utlit/branch_dropdown.dart';
+import 'package:ayurvedic_centre_patients/utlit/custom_dropdown.dart';
+import 'package:ayurvedic_centre_patients/utlit/treatment_widget.dart';
+import 'package:ayurvedic_centre_patients/view/popup.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:ayurvedic_centre_patients/utlit/colors.dart';
-import 'package:ayurvedic_centre_patients/utlit/common_widget.dart';
+import 'package:ayurvedic_centre_patients/utlit/customfield.dart';
 import 'package:ayurvedic_centre_patients/provider/signin_provider.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -14,9 +20,12 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  String? paymentMethod = 'cash'; // Default payment method
+  final PdfServices pdfServices = PdfServices();
+
+  String? paymentMethod = 'cash';
   DateTime? selectedDate;
   TimeOfDay selectedTime = const TimeOfDay(hour: 0, minute: 0);
+  List<Map<String, dynamic>> treatments = [];
 
   // Method to show the date picker
   Future<void> _selectDate(BuildContext context) async {
@@ -137,9 +146,10 @@ class _RegisterPageState extends State<RegisterPage> {
               child: Form(
                 key: signinProvider.regformKey,
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Name Field
-                    CommonWidget(
+                    Customfield(
                       hintText: "Enter Your Full Name",
                       label: 'Name',
                       controller: signinProvider.nameController,
@@ -148,7 +158,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 15),
 
                     // WhatsApp Number Field
-                    CommonWidget(
+                    Customfield(
                       hintText: "Enter Your Whatsapp Number",
                       label: 'Whatsapp Number',
                       controller: signinProvider.wanumberController,
@@ -157,76 +167,86 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 15),
 
                     // Address Field
-                    CommonWidget(
+                    Customfield(
                       hintText: "Enter Your Address",
                       label: 'Address',
                       controller: signinProvider.addressController,
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 15),
-                    // Branch Dropdown Field
-                    CommonWidget(
-                      hintText: "Select Your Branch",
-                      label: 'Branch',
-                      controller: signinProvider.branchController,
-                      keyboardType: TextInputType.text,
-                      child: DropdownButtonFormField<String>(
-                        value: signinProvider.selectedBranch,
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            signinProvider.selectedBranch = newValue;
-                          });
-                        },
-                        items: <String>['Branch 1', 'Branch 2', 'Branch 3']
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        decoration: const InputDecoration(
-                          labelText: 'Branch',
-                          hintText: 'Select your branch',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-
                     // Location Dropdown Field
-                    CommonWidget(
-                      hintText: "Select Your Location",
+                    CustomDropDownField(
+                      hintText: 'Select Your Location',
                       label: 'Location',
                       controller: signinProvider.locationController,
                       keyboardType: TextInputType.text,
-                      child: DropdownButtonFormField<String>(
-                        value: signinProvider.selectedLocation,
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            signinProvider.selectedLocation = newValue;
-                          });
-                        },
-                        items: <String>[
-                          'Location 1',
-                          'Location 2',
-                          'Location 3'
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        decoration: const InputDecoration(
-                          labelText: 'Location',
-                          hintText: 'Select your location',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
+                      selectedValue: signinProvider.selectedBranch,
+                      items: const ['Location 1', 'Location 2', 'Location 3'],
+                      onChanged: (newValue) {
+                        setState(() {
+                          signinProvider.selectedLocation = newValue;
+                        });
+                      },
                     ),
+                    const SizedBox(height: 15),
+                    // Branch Dropdown Field
+                    BranchDropdown(),
 
                     const SizedBox(height: 15),
+                    //Treatment
+                    TreatmentsWidget(
+                      maleCount: int.tryParse(Provider.of<AppProvider>(context)
+                              .malecoController
+                              .text) ??
+                          0,
+                      femaleCount: int.tryParse(
+                              Provider.of<AppProvider>(context)
+                                  .femalecoController
+                                  .text) ??
+                          0,
+                      title:
+                          Provider.of<AppProvider>(context).selectedTreatment ??
+                              'Couple Combo package i..',
+                      malecoController:
+                          Provider.of<AppProvider>(context).malecoController,
+                      femalecoController:
+                          Provider.of<AppProvider>(context).femalecoController,
+                      onEditPressed: () {},
+                    ),
+                    const SizedBox(
+                      height: 5,
+                    ),
+                    CustomSolidButton(
+                      text: '+ Add Treatments',
+                      onPressed: () async {
+                        // Show the PopUp and handle multiple treatments
+                        var result = await showDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          builder: (BuildContext context) {
+                            return PopUp();
+                          },
+                        );
+
+                        // Check if we have a valid result
+                        if (result != null) {
+                          setState(() {
+                            // Add the new treatment to the list
+                            treatments.add({
+                              'treatment': result['treatment'],
+                              'maleCount': result['maleCount'],
+                              'femaleCount': result['femaleCount'],
+                            });
+                          });
+                        }
+                      },
+                    ),
+
+                    const SizedBox(
+                      height: 15,
+                    ),
                     // Total Amount Field
-                    CommonWidget(
+                    Customfield(
                       hintText: "Enter Your total amount",
                       label: 'Total Amount',
                       controller: signinProvider.totalController,
@@ -235,7 +255,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 15),
 
                     // Discount Amount Field
-                    CommonWidget(
+                    Customfield(
                       hintText: "Enter Your discount amount",
                       label: 'Discount Amount',
                       controller: signinProvider.branchController,
@@ -330,7 +350,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 15),
                     //balance ammount field
-                    CommonWidget(
+                    Customfield(
                       hintText: "Enter Your Advance amount",
                       label: 'Advance Amount',
                       controller: signinProvider.advanceController,
@@ -340,7 +360,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       height: 15,
                     ),
                     //balance ammount field
-                    CommonWidget(
+                    Customfield(
                       hintText: "Enter Your Balance amount",
                       label: 'Balance Amount',
                       controller: signinProvider.balanceController,
@@ -353,7 +373,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     GestureDetector(
                       onTap: () => _selectDate(context),
                       child: AbsorbPointer(
-                        child: CommonWidget(
+                        child: Customfield(
                           hintText: selectedDate == null
                               ? "Select Treatment Date"
                               : "${selectedDate!.toLocal()}".split(' ')[0],
@@ -374,9 +394,10 @@ class _RegisterPageState extends State<RegisterPage> {
                           children: [
                             // Hour input field
                             Expanded(
-                              child: CommonWidget(
-                                hintText:
-                                    "${selectedTime.hour.toString().padLeft(2, '0')}",
+                              child: Customfield(
+                                hintText: selectedTime.hour
+                                    .toString()
+                                    .padLeft(2, '0'),
                                 label: 'Hour',
                                 controller: signinProvider.hourController,
                                 keyboardType: TextInputType.number,
@@ -385,9 +406,10 @@ class _RegisterPageState extends State<RegisterPage> {
                             const SizedBox(width: 10),
                             // Minute input field
                             Expanded(
-                              child: CommonWidget(
-                                hintText:
-                                    "${selectedTime.minute.toString().padLeft(2, '0')}",
+                              child: Customfield(
+                                hintText: selectedTime.minute
+                                    .toString()
+                                    .padLeft(2, '0'),
                                 label: 'Minute',
                                 controller: signinProvider.minController,
                                 keyboardType: TextInputType.number,
@@ -403,15 +425,17 @@ class _RegisterPageState extends State<RegisterPage> {
                     // Balance Amount Field
 
                     CustomSolidButton(
-                      text: 'Save',
-                      onPressed: () {
-                        if (signinProvider.signformKey.currentState
-                                ?.validate() ??
-                            false) {
-                          signinProvider.register(context);
-                        }
-                      },
-                    ),
+                        text: 'Save',
+                        onPressed: () async {
+                          // if (signinProvider.signformKey.currentState
+                          //         ?.validate() ??
+                          //     false) {
+                          //   signinProvider.register(context);
+                          // }
+                          final data = await pdfServices.generatePDF();
+
+                          pdfServices.savePdfFile('Invoice_machinetest', data);
+                        }),
                     const SizedBox(
                       height: 20,
                     ),

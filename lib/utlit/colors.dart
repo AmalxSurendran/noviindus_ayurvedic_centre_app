@@ -7,7 +7,7 @@ class Pallete {
   static const Color buttontext = Color.fromRGBO(255, 255, 255, 1);
   static const Color textcolor = Color.fromRGBO(0, 0, 0, 1);
   static const Color formtextcolor = Color.fromRGBO(0, 0, 0, 4);
-
+  static const Color Homepagecont = Color.fromRGBO(241, 241, 241, 1);
   static const Color warningred = Color.fromRGBO(221, 11, 11, 1);
   static const Color termstext = Color.fromRGBO(0, 40, 252, 1);
   static const Color loginsubtext = Color.fromRGBO(144, 144, 144, 1);
